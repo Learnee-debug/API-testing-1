@@ -1,13 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Hello Express!</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="stylesheet" href="./style.css" />
-  </head>
-  <body>
-    <h1>Hello Express!</h1>
-    <p>Showing <code>pages/index.html</code></p>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Data Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .input-group {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        input {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .student-list {
+            list-style: none;
+            padding: 0;
+        }
+        .student-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Student Data Dashboard</h1>
+        <div class="input-group">
+            <label for="threshold">Score Threshold:</label>
+            <input type="number" id="threshold" value="400" min="0" max="500">
+            <button onclick="getStudentsAboveThreshold()">Find Students</button>
+        </div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function getStudentsAboveThreshold() {
+            const threshold = parseInt(document.getElementById('threshold').value);
+            try {
+                const response = await fetch('/students/above-threshold', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ threshold })
+                });
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                console.error('Error:', error);
+                displayError('Failed to fetch data from server');
+            }
+        }
+
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            if (data.error) {
+                displayError(data.error);
+                return;
+            }
+            
+            let html = `<h3>Found ${data.count} students above threshold:</h3>
+                       <ul class="student-list">`;
+            data.students.forEach(student => {
+                html += `<li class="student-item">
+                            <strong>${student.name}</strong> - Total Score: ${student.total}
+                        </li>`;
+            });
+            html += '</ul>';
+            resultsDiv.innerHTML = html;
+        }
+
+        function displayError(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<p style="color: red; padding: 10px; background-color: #ffebee; border-radius: 4px;">
+                                    ${message}
+                                  </p>`;
+        }
+
+        // Load initial data when page loads
+        window.onload = () => {
+            getStudentsAboveThreshold();
+        };
+    </script>
+</body>
 </html>
